@@ -4,19 +4,27 @@
 #include <chrono>
 #include <random>
 
+#ifdef __APPLE__
+    #include <GLUT/glut.h>
+#else
+    #include <GL/glut.h>
+#endif
+
 class Chip8
 {
     public:
         Chip8();
         ~Chip8();
 
-        int loadGame();
+        int LoadGame();
 
-        void decodeOpcode();
-        void emulateCycle();
+        void DecodeOpcode();
+        void EmulateCycle();
+
+        void Display();
 
     protected:
-        void initialize();
+        void Initialize();
 
         unsigned char memory[4026]; // 4K Memory
         unsigned char V[16];        // REGISTERS: V0 -> V15 (V16 is carryh
@@ -38,5 +46,4 @@ class Chip8
         std::uniform_int_distribution<unsigned char> randByte;
 };
 
-void openFile();
 #endif //CHIP_8_CHIP8_H

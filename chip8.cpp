@@ -7,13 +7,13 @@ Chip8::Chip8(): memory{0}, V{0}, I(0), pc(0), delayTimer(0), soundTimer(0), stac
 {
     randByte = std::uniform_int_distribution<unsigned char>(0, 255u);
 
-    Initialize();
+    this->Initialize();
 }
 
 Chip8::~Chip8()
 { }
 
-void Chip8::initialize()
+void Chip8::Initialize()
 {
     pc     = 0x200u; //Program counter starts at 0x200
     opcode = 0;      // Reset current opcode
@@ -56,7 +56,7 @@ void Chip8::initialize()
 }
 
 
-int Chip8::loadGame()
+int Chip8::LoadGame()
 {
     FILE* rom;
     unsigned short bufferSize;
@@ -106,7 +106,7 @@ int Chip8::loadGame()
      * Execute Opcode
      * Update Timers
 */
-void Chip8::decodeOpcode()
+void Chip8::DecodeOpcode()
 {
     switch(opcode & 0xF000u)
     {
@@ -115,7 +115,8 @@ void Chip8::decodeOpcode()
             {
                 // ? VIDEO OPCODE
                 case 0x0000: // 0x00E0: Clears the screen (CLS)
-                    // Execute opcode
+                    glClearColor(0.0, 0.0, 0.0, 0.0);
+                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                     break;
 
                 case 0x000E: // 0x00EE: Returns from subroutine (RET)
@@ -244,21 +245,73 @@ void Chip8::decodeOpcode()
 
         // ? VIDEO OPCODE
         case 0xD000: // 0xDxyn: Displays n-byte sprite starting at memory location I at (Vx, Vy). (DRW Vx, Vy, nibble)
+
             break;
 
-        case
+        case 0xE000:
 
+            switch(opcode & 0x00F0)
+            {
+                case 0x0090: // 0xEx9E: Skips next instruction if the key containing Vx IS pressed (SKP Vx)
+
+                break;
+
+                case 0x00A0: // 0xExA1: Skips next instruction if the key containing is NOT pressed (SKNP Vx)
+
+                break;
+            }
+
+        case 0xF000:
+            switch(opcode & 0x00FF)
+            {
+                case 0x0007: // 0xFx07: Sets Vx = delay timer value (Ld Vx, DT)
+                    V[(opcode & 0x0F00u) >> 8u] = delayTimer;
+                    break;
+
+                case 0x000A: // Waits for a key press, then stores the value of the key into Vx (Ld Vx, K)
+
+                    break;
+
+                case 0x0015: // Sets delayTimer == Vx (LD displayTimer, Vx)
+                    delayTimer = V[(opcode & 0x0F00u) >> 8u];
+                    break;
+
+                case 0x0018: // Sets soundTimer == Vx (LD soundTimer, Vx)
+                    soundTimer = V[(opcode & 0x0F00u) >> 8u];
+                    break;
+
+                case 0x001E: // Sets I = I + Vx (ADD I, Vx)
+                    I += V[(opcode & 0x0F00u) >> 8u];
+                    break;
+
+                case 0x0029: // Sets I = location of Vx's digit sprite (LD F, Vx)
+
+                    break;
+
+                case 0x0033: // Stores BCD (binary coded decimal) representation of Vx in I, I+1, and I+2 (LD B, Vx)
+
+                    break;
+
+                case 0x0055: // Stores registers V0 -> Vx in memory starting at location I (index register)
+                    for(int j = 0; j <= (opcode & 0x0F00u); ++j)
+                        memory[I + j] = V[j];
+                    break;
+
+                case 0x0065: // Reads registers V0 -> Vx from memory starting at location I (index register)
+                    for(int j = 0; j <= (opcode & 0x0F00u); ++j)
+                        V[j] = memory[I + j];
+                    break;
+            }
     }
+}
 
-};
 
-
-void Chip8::emulateCycle()
+void Chip8::EmulateCycle()
 {
     // Merge the two bytes of memory to construct the current 2 byte opcode
     opcode = memory[pc] << 8 | memory[pc + 1];
 
-    this->decodeOpcode();
+    this->DecodeOpcode();
 
     if(delayTimer > 0)
         --delayTimer;
@@ -271,7 +324,12 @@ void Chip8::emulateCycle()
     }
 }
 
+void Chip8::Display()
+{
+    this->EmulateCycle();
 
+
+}
 
 /*
 void openFile()

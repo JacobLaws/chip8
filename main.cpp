@@ -1,6 +1,7 @@
+#include <cstdio>
+
 #include "chip8.h"
 #include "graphics.h"
-#include <cstdio>
 
 #ifdef __APPLE__
     #include <GLUT/glut.h>
@@ -20,8 +21,7 @@ int main(int argc, char **argv)
 
     Chip8 chip8;
 
-    chip8.initialize();
-    if(chip8.loadGame() != 0)
+    if(chip8.LoadGame() != 0)
         return -1;
 
     displayWidth  = WINDOW_WIDTH  * displayScale;
@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
     glutCreateWindow("Chip8 Emulator by Jacob Laws");
 
-    glutDisplayFunc(renderScene);
+    glutDisplayFunc(chip8.EmulateCycle);
 
     glutMainLoop();
 
@@ -46,7 +46,7 @@ int main(int argc, char **argv)
     for(ever)
     {
         // Emulate one cycle
-        chip8.emulateCycle();
+        chip8.EmulateCycle();
 
         // If the draw flag is set, update the screen
         if(chip8.drawFlag)

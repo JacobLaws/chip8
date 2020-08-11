@@ -1,4 +1,17 @@
 CHIP8 TODO
 
-1. Put file opening and reading into its own global function
-    1. Currently in void Chip8::loadGame()
+ROM LOADING
+1. Move file I/O out of Chip8::loadGame() and into it's own function
+
+OPCODES
+1. One function per opcode rather than giant switch statement
+2. IMPLEMENT: 0xDxxx -> Sprite drawing
+3. IMPLEMENT: 0xExxx -> Skip due to button press (or not button press)
+4. IMPLEMENT: 0xFX0A -> Wait for button press
+5. IMPLEMENT: 0xFX29 -> Sets the index register to Vx's sprite location
+6. IMPLEMENT: 0xFX33 -> Stores BCD representation of Vx into I, I + 2, I + 3
+7. [DONE] [NT] IMPLEMENT: 0xFX55 -> Stores registers V0 -> Vx in memory starting at location I (index register)
+8. [DONE] [NT] IMPLEMENT: 0xFX65 -> Reads registers V0 -> Vx from memory starting at location I (index register)
+
+Chip8::LoadGame()
+1. [DONE] [NT] Implement error return codes

@@ -1,4 +1,5 @@
 #include "graphics.h"
+#include
 
 #ifdef __APPLE__
     #include <GLUT/glut.h>
@@ -6,8 +7,10 @@
     #include <GL/glut.h>
 #endif
 
-void renderScene()
+void Display()
 {
+    chip8.EmulateCycle();
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glBegin(GL_TRIANGLES);
