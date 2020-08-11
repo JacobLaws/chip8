@@ -1,0 +1,4 @@
+CHIP8 TODO
+
+1. Put file opening and reading into its own global function
+    1. Currently in void Chip8::loadGame()
