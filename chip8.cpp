@@ -45,7 +45,7 @@ void Chip8::Initialize()
                     0xF0, 0x80, 0xF0, 0x80, 0x80  // F
             };
 
-    // Load fontset
+    // Load font set
     for(int i = 0; i < 80; ++i)
     {
         memory[i] = fontset[i];
@@ -63,10 +63,10 @@ int Chip8::LoadGame()
     unsigned char* buffer;
     size_t readLen;
 
-    rom = fopen(R"(C:\Users\LawsV\Documents\Google Drive\Hobbies\Programming\C++\Emulators\chip-8\roms (David Winter)\PONG)", "rb");
+    rom = fopen(R"(C:\Users\LawsV\Documents\Google Drive\Hobbies\Programming\C++\Emulators\chip8\roms (David Winter)\PONG)", "rb");
     if(rom == nullptr)
     {
-        fputs("Error: rom could not be read", stderr);
+        std::fprintf(stderr, "Unable to open find/open ROM");
         return -1;
     }
 
@@ -115,8 +115,6 @@ void Chip8::DecodeOpcode()
             {
                 // ? VIDEO OPCODE
                 case 0x0000: // 0x00E0: Clears the screen (CLS)
-                    glClearColor(0.0, 0.0, 0.0, 0.0);
-                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                     break;
 
                 case 0x000E: // 0x00EE: Returns from subroutine (RET)
@@ -185,7 +183,7 @@ void Chip8::DecodeOpcode()
                     else
                         V[15] = 0;
 
-                    V[(opcode & 0x0F00u) >> 8u] = V[(opcode & 0x0F00u) >> 8u] + V[(opcode & 0x00F0u) >> 4u] & 0x00FFu;
+                    V[(opcode & 0x0F00u) >> 8u] = (V[(opcode & 0x0F00u) >> 8u] + V[(opcode & 0x00F0u) >> 4u]) & 0x00FFu;
                     break;
 
                 case 0x0005: //0x8xy5: Sets Vx = Vx - Vy (SUB Vx, Vy)
@@ -250,7 +248,7 @@ void Chip8::DecodeOpcode()
 
         case 0xE000:
 
-            switch(opcode & 0x00F0)
+            switch(opcode & 0x00F0u)
             {
                 case 0x0090: // 0xEx9E: Skips next instruction if the key containing Vx IS pressed (SKP Vx)
 
@@ -262,7 +260,7 @@ void Chip8::DecodeOpcode()
             }
 
         case 0xF000:
-            switch(opcode & 0x00FF)
+            switch(opcode & 0x00FFu)
             {
                 case 0x0007: // 0xFx07: Sets Vx = delay timer value (Ld Vx, DT)
                     V[(opcode & 0x0F00u) >> 8u] = delayTimer;
@@ -293,12 +291,12 @@ void Chip8::DecodeOpcode()
                     break;
 
                 case 0x0055: // Stores registers V0 -> Vx in memory starting at location I (index register)
-                    for(int j = 0; j <= (opcode & 0x0F00u); ++j)
+                    for(unsigned int j = 0; j <= (opcode & 0x0F00u); ++j)
                         memory[I + j] = V[j];
                     break;
 
                 case 0x0065: // Reads registers V0 -> Vx from memory starting at location I (index register)
-                    for(int j = 0; j <= (opcode & 0x0F00u); ++j)
+                    for(unsigned int j = 0; j <= (opcode & 0x0F00u); ++j)
                         V[j] = memory[I + j];
                     break;
             }
@@ -309,7 +307,7 @@ void Chip8::DecodeOpcode()
 void Chip8::EmulateCycle()
 {
     // Merge the two bytes of memory to construct the current 2 byte opcode
-    opcode = memory[pc] << 8 | memory[pc + 1];
+    opcode = memory[pc] << 8u | memory[pc + 1];
 
     this->DecodeOpcode();
 

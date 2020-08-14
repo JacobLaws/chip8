@@ -4,12 +4,6 @@
 #include <chrono>
 #include <random>
 
-#ifdef __APPLE__
-    #include <GLUT/glut.h>
-#else
-    #include <GL/glut.h>
-#endif
-
 class Chip8
 {
     public:

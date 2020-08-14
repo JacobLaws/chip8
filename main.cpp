@@ -1,63 +1,71 @@
 #include <cstdio>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
 #include "chip8.h"
-#include "graphics.h"
-
-#ifdef __APPLE__
-    #include <GLUT/glut.h>
-#else
-    #include <GL/glut.h>
-#endif
 
 #define ever ;;
 #define WINDOW_WIDTH 64
 #define WINDOW_HEIGHT 32
 
-int main(int argc, char **argv)
+void frameBufferSizeCallback(GLFWwindow*, int width, int height);
+
+int main()
 {
     int displayScale  = 14;
-    int displayWidth  =  0;
-    int displayHeight =  0;
+    int displayWidth  = WINDOW_WIDTH  * displayScale;
+    int displayHeight = WINDOW_HEIGHT * displayScale;
 
     Chip8 chip8;
 
     if(chip8.LoadGame() != 0)
-        return -1;
-
-    displayWidth  = WINDOW_WIDTH  * displayScale;
-    displayHeight = WINDOW_HEIGHT * displayScale;
-
-    glutInit(&argc, argv);
-
-    glutInitWindowPosition(-1, -1);
-    glutInitWindowSize(displayWidth, displayHeight);
-    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
-    glutCreateWindow("Chip8 Emulator by Jacob Laws");
-
-    glutDisplayFunc(chip8.EmulateCycle);
-
-    glutMainLoop();
-
-
-
-
-    /*
-    // Main emulation loop
-    for(ever)
     {
-        // Emulate one cycle
-        chip8.EmulateCycle();
-
-        // If the draw flag is set, update the screen
-        if(chip8.drawFlag)
-            chip8.drawGraphics();
-
-        // Store key press state (press and release)
-        chip8.setInput();
-
+        std::fprintf(stderr, "Failed to load the ROM\n");
+        return -4;
     }
-    */
+
+    if(!glfwInit())
+    {
+        std::fprintf(stderr, "Failed to initialize GLFW\n");
+        return -2;
+    }
+
+    glfwWindowHint(GLFW_SAMPLES, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    GLFWwindow* window;
+    window = glfwCreateWindow(displayWidth, displayHeight, "Chip8 Emulator by Jacob Laws", nullptr, nullptr);
+    glfwMakeContextCurrent(window);
+    if(window == nullptr)
+    {
+        std::fprintf(stderr, "Failed to open GLFW window.\n");
+        glfwTerminate();
+        return -3;
+    }
+
+    if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        std::fprintf(stderr, "Failed to initialize GLAD\n");
+        return -2;
+    }
+
+    glViewport(0, 0, displayWidth, displayHeight);
+    glfwSetFramebufferSizeCallback(window, frameBufferSizeCallback);
+
+    while(!glfwWindowShouldClose(window))
+    {
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+    glfwTerminate();
 
     return 0;
+}
+
+void frameBufferSizeCallback(GLFWwindow* window, int width, int height)
+{
+    glViewport(0, 0, width, height);
 }
 
