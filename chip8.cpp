@@ -1,5 +1,4 @@
 #include "chip8.h"
-#include <cstdio>
 
 
 Chip8::Chip8(): memory{0}, V{0}, I(0), pc(0), delayTimer(0), soundTimer(0), stack{0}, sp(0),
@@ -7,13 +6,16 @@ Chip8::Chip8(): memory{0}, V{0}, I(0), pc(0), delayTimer(0), soundTimer(0), stac
 {
     randByte = std::uniform_int_distribution<unsigned char>(0, 255u);
 
-    this->Initialize();
+    this->InitializeCPU();
+    this->InitializeGPU();
 }
 
 Chip8::~Chip8()
-{ }
+{
+    glfwTerminate();
+}
 
-void Chip8::Initialize()
+void Chip8::InitializeCPU()
 {
     pc     = 0x200u; //Program counter starts at 0x200
     opcode = 0;      // Reset current opcode
@@ -55,6 +57,45 @@ void Chip8::Initialize()
     soundTimer = 0;
 }
 
+int Chip8::InitializeGPU()
+{
+    int displayScale  = 14;
+    int displayWidth  = WINDOW_WIDTH  * displayScale;
+    int displayHeight = WINDOW_HEIGHT * displayScale;
+
+    if(!glfwInit())
+    {
+        std::fprintf(stderr, "Failed to initialize GLFW\n");
+        return -1;
+    }
+
+    glfwWindowHint(GLFW_SAMPLES, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+    glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+
+    window = glfwCreateWindow(displayWidth, displayHeight, "Chip8 Emulator by Jacob Laws", nullptr, nullptr);
+    glfwMakeContextCurrent(window);
+    if(window == nullptr)
+    {
+        std::fprintf(stderr, "Failed to open GLFW window.\n");
+        glfwTerminate();
+        return -2;
+    }
+
+    if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        std::fprintf(stderr, "Failed to initialize GLAD\n");
+        return -3;
+    }
+
+    glViewport(0, 0, displayWidth, displayHeight);
+    glfwSetFramebufferSizeCallback(window, FrameBufferSizeCallback);
+
+    return 0;
+}
 
 int Chip8::LoadGame()
 {
@@ -100,12 +141,6 @@ int Chip8::LoadGame()
     return 0;
 }
 
-/*
-     * Fetch Opcode
-     * Decode Opcode
-     * Execute Opcode
-     * Update Timers
-*/
 void Chip8::DecodeOpcode()
 {
     switch(opcode & 0xF000u)
@@ -115,6 +150,8 @@ void Chip8::DecodeOpcode()
             {
                 // ? VIDEO OPCODE
                 case 0x0000: // 0x00E0: Clears the screen (CLS)
+                    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                    glClear(GL_COLOR_BUFFER_BIT);
                     break;
 
                 case 0x000E: // 0x00EE: Returns from subroutine (RET)
@@ -243,6 +280,12 @@ void Chip8::DecodeOpcode()
 
         // ? VIDEO OPCODE
         case 0xD000: // 0xDxyn: Displays n-byte sprite starting at memory location I at (Vx, Vy). (DRW Vx, Vy, nibble)
+        {
+            unsigned char Vx = (opcode & 0x0F00u) >> 8u;
+            unsigned char Vy = (opcode & 0x00F0u) >> 4u;
+
+
+        }
 
             break;
 
@@ -303,7 +346,6 @@ void Chip8::DecodeOpcode()
     }
 }
 
-
 void Chip8::EmulateCycle()
 {
     // Merge the two bytes of memory to construct the current 2 byte opcode
@@ -324,32 +366,31 @@ void Chip8::EmulateCycle()
 
 void Chip8::Display()
 {
-    this->EmulateCycle();
+    while(!glfwWindowShouldClose(window))
+    {
+        this->EmulateCycle();
 
-
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+        glfwSwapInterval(1);
+    }
 }
 
-/*
-void openFile()
+void Chip8::Input()
 {
-    FILE* fp = fopen("/roms (David Winter)/pong", "rb");
 
-    if(!fp)
-    {
-        perror("File not found");
-        return FILE_READ_FAILURE;
-    }
-
-    while((c = fgetc(fp)) != EOF)
-    {
-
-    }
-
-    if(ferror(fp))
-        puts("I/O error when reading");
-    else if(feof(fp))
-        puts("End of file reached successfully");
-
-    fclose(fp);
 }
-*/
+
+void Chip8::FrameBufferSizeCallback(GLFWwindow* window, int width, int height)
+{
+    glViewport(0, 0, width, height);
+}
+
+void Chip8::InitializeVAO()
+{
+    GLuint VertexArrayID;
+    glGenVertexArrays(1. &VertexArrayID);
+    glBindVertexArray(VertexArrayID);
+
+
+}

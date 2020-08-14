@@ -1,8 +1,15 @@
 #ifndef CHIP_8_CHIP8_H
 #define CHIP_8_CHIP8_H
 
+#include <cstdio>
 #include <chrono>
 #include <random>
+
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
+#define WINDOW_WIDTH 64
+#define WINDOW_HEIGHT 32
 
 class Chip8
 {
@@ -16,9 +23,14 @@ class Chip8
         void EmulateCycle();
 
         void Display();
+        void Input();
 
     protected:
-        void Initialize();
+        void InitializeCPU();
+        int InitializeGPU();
+
+        void InitializeVAO();
+        static void FrameBufferSizeCallback(GLFWwindow*, int width, int height);
 
         unsigned char memory[4026]; // 4K Memory
         unsigned char V[16];        // REGISTERS: V0 -> V15 (V16 is carryh
@@ -38,6 +50,8 @@ class Chip8
 
         std::default_random_engine randSeed;
         std::uniform_int_distribution<unsigned char> randByte;
+
+        GLFWwindow* window;
 };
 
 #endif //CHIP_8_CHIP8_H
