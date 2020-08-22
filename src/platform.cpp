@@ -1,7 +1,7 @@
 //
 // Created by LawsV on 8/18/2020.
 //
-#include "graphics.h"
+#include "platform.hpp"
 
 Graphics::Graphics(): window{nullptr}, renderer{nullptr}, texture{nullptr}, input{0}
 {}
