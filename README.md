@@ -1,2 +1,2 @@
 # chip8
-wip chip8 emulator developed by Jacob Laws
+wip chip8 emulator
