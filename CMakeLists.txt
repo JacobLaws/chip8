@@ -13,7 +13,7 @@ include_directories(${SDL2_INCLUDE_DIRS})
 set(MAIN_SOURCE src/main.cpp)
 set(CHIP8_SOURCE src/chip8.hpp src/chip8.cpp)
 set(OPCODES_SOURCE src/opcodes.hpp src/opcodes.cpp)
-set(PLATFORM_SOURCE src/platform.hpp src/platform.cpp)
+set(PLATFORM_SOURCE src/emulator.hpp src/emulator.cpp)
 
 set(SOURCE_FILES ${MAIN_SOURCE} ${CHIP8_SOURCE} ${OPCODES_SOURCE} ${PLATFORM_SOURCE})
 add_executable(chip8 ${SOURCE_FILES})

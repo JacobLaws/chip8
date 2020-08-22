@@ -1,7 +1,6 @@
 #include "chip8.hpp"
 
-Chip8::Chip8(): memory{0}, V{0}, I(0), pc(0), delayTimer(0), soundTimer(0), stack{0}, sp(0), keyPad{0},
-                gfx{0}, opcode(0), randSeed(std::chrono::system_clock::now().time_since_epoch().count())
+Chip8::Chip8(): randSeed(std::chrono::system_clock::now().time_since_epoch().count())
 {
     randByte = std::uniform_int_distribution<unsigned char>(0, 255u);
 
@@ -18,11 +17,13 @@ void Chip8::Initialize()
     I      = 0;      // Reset index register
     sp     = 0;      // Reset stack pointer
 
-    // Clear display
-    // Clear stack
-    // Clear registers V0 -> VF
-    // Clear memory
+    // Clear the gfx pixels, stack, registers, and memory
+    memset(gfx, 0, sizeof(gfx));
+    memset(stack, 0, sizeof(stack));
+    memset(V, 0, sizeof(V));
+    memset(memory, 0, sizeof(memory));
 
+    // Chip8 fontset
     unsigned char fontset[80]   // Each number/character is 4 x 5 pixels
             {
                     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -43,60 +44,19 @@ void Chip8::Initialize()
                     0xF0, 0x80, 0xF0, 0x80, 0x80  // F
             };
 
-    // Load font set
+    // Load the font set into memory starting at 0x50
     for(int i = 0; i < 80; ++i)
     {
-        memory[i] = fontset[i];
+        memory[0x50 + i] = fontset[i];
     }
 
+    // Initialize both timers to off
     delayTimer = 0;
     soundTimer = 0;
 }
 
-int Chip8::LoadGame()
-{
-    FILE* rom;
-    unsigned short bufferSize;
-    unsigned char* buffer;
-    size_t readLen;
 
-    rom = fopen(R"(C:\Users\LawsV\Documents\Google Drive\Hobbies\Programming\C++\Emulators\chip8\roms (David Winter)\BRIX)", "rb");
-    if(rom == nullptr)
-    {
-        std::fprintf(stderr, "Unable to open find/open ROM");
-        return -1;
-    }
-
-    // Obtain the buffer/file size
-    fseek(rom, 0, SEEK_END);
-    bufferSize = ftell(rom);
-    rewind(rom);
-
-    buffer = new unsigned char[bufferSize];
-    if(buffer == nullptr)
-    {
-        fputs("Error: Memory error", stderr);
-        return -2;
-    }
-
-    readLen = fread(buffer, 1, bufferSize, rom);
-    if(readLen != bufferSize)
-    {
-        fputs("Error: File read error", stderr);
-        return -3;
-    }
-
-    for(int i = 0; i < bufferSize; ++i)
-    {
-        memory[i + 512] = buffer[i];
-    }
-
-    fclose(rom);
-    delete [] buffer;
-
-    return 0;
-}
-
+/*
 void Chip8::DecodeOpcode()
 {
     switch(opcode & 0xF000u)
@@ -373,7 +333,9 @@ void Chip8::DecodeOpcode()
             }
     }
 }
+*/
 
+/*
 void Chip8::EmulateCycle()
 {
     // Merge the two bytes of memory to construct the current 2 byte opcode
@@ -408,4 +370,4 @@ void Chip8::SetKeyOff(int keyIn)
 {
     keyPad[keyIn] = 0;
 }
-
+*/
