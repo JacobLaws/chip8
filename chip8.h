@@ -1,8 +1,12 @@
 #ifndef CHIP_8_CHIP8_H
 #define CHIP_8_CHIP8_H
 
+#include <cstdio>
+#include <cstdint>
 #include <chrono>
 #include <random>
+
+#include <SDL2/SDL.h>
 
 class Chip8
 {
@@ -15,9 +19,11 @@ class Chip8
         void DecodeOpcode();
         void EmulateCycle();
 
-        void Display();
+        const void* GetGfx();
+        void SetKeyOn(int keyIn);
+        void SetKeyOff(int keyIn);
 
-    protected:
+    //private:
         void Initialize();
 
         unsigned char memory[4026]; // 4K Memory
@@ -33,7 +39,7 @@ class Chip8
         unsigned short sp;          // Stack pointer
 
         unsigned char keyPad[16];   // HEX based keypad  (0x0 -> 0xF)
-        unsigned char gfx[64*32];   // RESOLUTION: 64 x 32 (2048 pixels)
+        uint32_t gfx[64*32];   // RESOLUTION: 64 x 32 (2048 pixels)
         unsigned short opcode;      // Opcodes pointer (35 in total)
 
         std::default_random_engine randSeed;

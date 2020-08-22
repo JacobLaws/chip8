@@ -1,9 +1,7 @@
 #include "chip8.h"
-#include <cstdio>
 
-
-Chip8::Chip8(): memory{0}, V{0}, I(0), pc(0), delayTimer(0), soundTimer(0), stack{0}, sp(0),
-                keyPad{0}, gfx{0}, opcode(0), randSeed(std::chrono::system_clock::now().time_since_epoch().count())
+Chip8::Chip8(): memory{0}, V{0}, I(0), pc(0), delayTimer(0), soundTimer(0), stack{0}, sp(0), keyPad{0},
+                gfx{0}, opcode(0), randSeed(std::chrono::system_clock::now().time_since_epoch().count())
 {
     randByte = std::uniform_int_distribution<unsigned char>(0, 255u);
 
@@ -55,7 +53,6 @@ void Chip8::Initialize()
     soundTimer = 0;
 }
 
-
 int Chip8::LoadGame()
 {
     FILE* rom;
@@ -63,7 +60,7 @@ int Chip8::LoadGame()
     unsigned char* buffer;
     size_t readLen;
 
-    rom = fopen(R"(C:\Users\LawsV\Documents\Google Drive\Hobbies\Programming\C++\Emulators\chip8\roms (David Winter)\PONG)", "rb");
+    rom = fopen(R"(C:\Users\LawsV\Documents\Google Drive\Hobbies\Programming\C++\Emulators\chip8\roms (David Winter)\BRIX)", "rb");
     if(rom == nullptr)
     {
         std::fprintf(stderr, "Unable to open find/open ROM");
@@ -100,12 +97,6 @@ int Chip8::LoadGame()
     return 0;
 }
 
-/*
-     * Fetch Opcode
-     * Decode Opcode
-     * Execute Opcode
-     * Update Timers
-*/
 void Chip8::DecodeOpcode()
 {
     switch(opcode & 0xF000u)
@@ -115,11 +106,16 @@ void Chip8::DecodeOpcode()
             {
                 // ? VIDEO OPCODE
                 case 0x0000: // 0x00E0: Clears the screen (CLS)
+                    memset(gfx, 0, sizeof(gfx));
                     break;
 
                 case 0x000E: // 0x00EE: Returns from subroutine (RET)
-                    pc = stack[sp];
+
                     --sp;
+                    pc = stack[sp];
+
+                    //pc = stack[sp];
+                    //--sp;
                     break;
             }
             break;
@@ -129,9 +125,15 @@ void Chip8::DecodeOpcode()
             break;
 
         case 0x2000: // 0x2nnn: Calls subroutine at nnn (CALL addr)
-            ++sp;
+
             stack[sp] = pc;
+            ++sp;
             pc = opcode & 0x0FFFu;
+
+
+            //++sp;
+            //stack[sp] = pc;
+            //pc = opcode & 0x0FFFu;
             break;
 
         case 0x3000: // 0x3xkk: Skips next instruction if Vx = kk (SE Vx, byte)
@@ -146,7 +148,7 @@ void Chip8::DecodeOpcode()
 
         case 0x5000: // 0x5xy0: Skips next instruction if Vx = Vy (SE Vx, Vy)
             if( (V[(opcode & 0x0F00u) >> 8u]) == (V[(opcode & 0x00F0u) >> 4u]) )
-                pc +=2;
+                pc += 2;
             break;
 
         case 0x6000: // 0x6xkk: Sets Vx = kk (LD Vx, byte)
@@ -177,47 +179,47 @@ void Chip8::DecodeOpcode()
                     break;
 
                 case 0x0004: //0x8xy4: Sets Vx = Vx + Vy (ADD Vx, Vy)
-
-                    if( (V[(opcode & 0x0F00u) >> 8u] + V[(opcode & 0x00F0u) >> 4u]) > 255u )
-                        V[15] = 1;
+                    if ( (V[(opcode & 0x0F00u) >> 8u] + V[(opcode & 0x00F0u) >> 4u]) > 255u )
+                        V[0xF] = 1;
                     else
-                        V[15] = 0;
+                        V[0xF] = 0;
 
-                    V[(opcode & 0x0F00u) >> 8u] = (V[(opcode & 0x0F00u) >> 8u] + V[(opcode & 0x00F0u) >> 4u]) & 0x00FFu;
+                    V[(opcode & 0x0F00u) >> 8u] = (V[(opcode & 0x0F00u) >> 8u] + V[(opcode & 0x00F0u) >> 4u]);
+                    V[(opcode & 0x0F00u) >> 8u] &= 0x00FFu;
                     break;
 
                 case 0x0005: //0x8xy5: Sets Vx = Vx - Vy (SUB Vx, Vy)
-                    if( V[(opcode & 0x0F00u) >> 8u] > V[(opcode & 0x00F0u) >> 4u])
-                        V[15] = 1;
+                    if( V[(opcode & 0x0F00u) >> 8u] > V[(opcode & 0x00F0u) >> 4u] )
+                        V[0xF] = 1;
                     else
-                        V[15] = 0;
+                        V[0xF] = 0;
 
-                    V[(opcode & 0x0F00u) >> 8u] -= V[(opcode & 0x00F0u) >> 4u] & 0x00FFu;
+                    V[(opcode & 0x0F00u) >> 8u] -= V[(opcode & 0x00F0u) >> 4u];
                     break;
 
                 case 0x0006: //0x8xy6: Sets Vx = Vx SHR Vy (SHR Vx {, Vy})
-                    if( (V[(opcode &0x0F00u) >> 8u] & 0x1u) == 0x1u )
-                        V[15] = 1;
+                    if( (V[(opcode &0x0F00u) >> 8u] & 0x01u) == 0x01u )
+                        V[0xF] = 1;
                     else
-                        V[15] = 0;
+                        V[0xF] = 0;
 
                     V[(opcode & 0x0F00u) >> 8u] /= 2;
                     break;
 
-                case 0x0007: //0x8xy7: Sets Vx = Vx SUBN Vy (SUBN Vx, Vy)
+                case 0x0007: //0x8xy7: Sets Vx = Vy - Vx (SUB Vx, Vy)
                     if( V[(opcode & 0x0F00u) >> 8u] < V[(opcode & 0x00F0u) >> 4u])
-                        V[15] = 1;
+                        V[0xF] = 1;
                     else
-                        V[15] = 0;
+                        V[0xF] = 0;
 
                     V[(opcode & 0x0F00u) >> 8u] = V[(opcode & 0x00F0u) >> 4u] - V[(opcode & 0x0F00u) >> 8u];
                     break;
 
                 case 0x000E: //0x8xyE: Sets Vx = Vx SHL 1 (SHL Vx, 1)
-                    if( (V[(opcode &0x0F00u) >> 8u] & 0x80u) >> 7u == 0x1u )
-                        V[15] = 1;
+                    if( (V[(opcode &0x0F00u) >> 8u] & 0x80u) >> 7u == 0x01u )
+                        V[0xF] = 1;
                     else
-                        V[15] = 0;
+                        V[0xF] = 0;
 
                     V[(opcode & 0x0F00u) >> 8u] *= 2;
                     break;
@@ -243,20 +245,46 @@ void Chip8::DecodeOpcode()
 
         // ? VIDEO OPCODE
         case 0xD000: // 0xDxyn: Displays n-byte sprite starting at memory location I at (Vx, Vy). (DRW Vx, Vy, nibble)
+        {
+            unsigned char Vx = V[(opcode & 0x0F00u) >> 8u];
+            unsigned char Vy = V[(opcode & 0x00F0u) >> 4u];
+            unsigned char height = opcode & 0x000Fu;
 
-            break;
+            unsigned char xPos = Vx % 64;
+            unsigned char yPos = Vy % 32;
 
+            V[0xF] = 0;
+
+             for(unsigned int row = 0; row < height; ++row)
+             {
+                 uint32_t rowPixels = memory[I + row];
+
+                 for(unsigned int col = 0; col < 8; ++col)
+                 {
+                     if( rowPixels & (0x80u >> col) )
+                     {
+                         if( gfx[((xPos + col) + ((yPos + row) * 64)) % 2048] == 0xFFFFFFFFu)
+                             V[0xF] |= 1u;
+
+                         gfx[((xPos + col) + ((yPos + row) * 64)) % 2048] ^= 0xFFFFFFFFu;
+                     }
+                 }
+             }
+             break;
+        }
         case 0xE000:
 
             switch(opcode & 0x00F0u)
             {
                 case 0x0090: // 0xEx9E: Skips next instruction if the key containing Vx IS pressed (SKP Vx)
-
+                   if( keyPad[V[(opcode & 0x0F00u) >> 8u]] != 0 )
+                       pc += 2;
                 break;
 
-                case 0x00A0: // 0xExA1: Skips next instruction if the key containing is NOT pressed (SKNP Vx)
-
-                break;
+                case 0x00A0: // 0xExA1: Skips next instruction if the key containing Vx is NOT pressed (SKNP Vx)
+                    if(keyPad[V[(opcode & 0x0F00u) >> 8u]] == 0)
+                        pc += 2;
+                    break;
             }
 
         case 0xF000:
@@ -267,8 +295,45 @@ void Chip8::DecodeOpcode()
                     break;
 
                 case 0x000A: // Waits for a key press, then stores the value of the key into Vx (Ld Vx, K)
+                {
+                    unsigned char x = (opcode & 0x0F00u) >> 8u;
 
+                    if(keyPad[0])
+                        V[x] = 0;
+                    else if(keyPad[1])
+                        V[x] = 1;
+                    else if(keyPad[2])
+                        V[x] = 2;
+                    else if(keyPad[3])
+                        V[x] = 3;
+                    else if(keyPad[4])
+                        V[x] = 4;
+                    else if(keyPad[5])
+                        V[x] = 5;
+                    else if(keyPad[6])
+                        V[x] = 6;
+                    else if(keyPad[7])
+                        V[x] = 7;
+                    else if(keyPad[8])
+                        V[x] = 8;
+                    else if(keyPad[9])
+                        V[x] = 9;
+                    else if(keyPad[0xA])
+                        V[x] = 0xA;
+                    else if(keyPad[0xB])
+                        V[x] = 0xB;
+                    else if(keyPad[0xC])
+                        V[x] = 0xC;
+                    else if(keyPad[0xD])
+                        V[x] = 0xD;
+                    else if(keyPad[0xE])
+                        V[x] = 0xE;
+                    else if(keyPad[0xF])
+                        V[x] = 0xF;
+                    else
+                        pc -= 2;
                     break;
+                }
 
                 case 0x0015: // Sets delayTimer == Vx (LD displayTimer, Vx)
                     delayTimer = V[(opcode & 0x0F00u) >> 8u];
@@ -283,31 +348,38 @@ void Chip8::DecodeOpcode()
                     break;
 
                 case 0x0029: // Sets I = location of Vx's digit sprite (LD F, Vx)
-
+                    I = memory[0x50u + (V[(opcode & 0x0F00u) >> 8u] * 5)];
                     break;
 
                 case 0x0033: // Stores BCD (binary coded decimal) representation of Vx in I, I+1, and I+2 (LD B, Vx)
+                {
+                    unsigned char Vx = V[(opcode & 0x0F00u) >> 8u];
 
+                    memory[I]     = Vx / 100;
+                    memory[I + 1] = (Vx / 10) % 10;
+                    memory[I + 2] = Vx % 10;
                     break;
+                }
 
                 case 0x0055: // Stores registers V0 -> Vx in memory starting at location I (index register)
-                    for(unsigned int j = 0; j <= (opcode & 0x0F00u); ++j)
+                    for(unsigned int j = 0; j <= ((opcode & 0x0F00u) >> 8u); ++j)
                         memory[I + j] = V[j];
                     break;
 
                 case 0x0065: // Reads registers V0 -> Vx from memory starting at location I (index register)
-                    for(unsigned int j = 0; j <= (opcode & 0x0F00u); ++j)
+                    for(unsigned int j = 0; j <= ((opcode & 0x0F00u) >> 8u); ++j)
                         V[j] = memory[I + j];
                     break;
             }
     }
 }
 
-
 void Chip8::EmulateCycle()
 {
     // Merge the two bytes of memory to construct the current 2 byte opcode
     opcode = memory[pc] << 8u | memory[pc + 1];
+
+    pc += 2;
 
     this->DecodeOpcode();
 
@@ -322,34 +394,18 @@ void Chip8::EmulateCycle()
     }
 }
 
-void Chip8::Display()
+const void* Chip8::GetGfx()
 {
-    this->EmulateCycle();
-
-
+    return gfx;
 }
 
-/*
-void openFile()
+void Chip8::SetKeyOn(int keyIn)
 {
-    FILE* fp = fopen("/roms (David Winter)/pong", "rb");
-
-    if(!fp)
-    {
-        perror("File not found");
-        return FILE_READ_FAILURE;
-    }
-
-    while((c = fgetc(fp)) != EOF)
-    {
-
-    }
-
-    if(ferror(fp))
-        puts("I/O error when reading");
-    else if(feof(fp))
-        puts("End of file reached successfully");
-
-    fclose(fp);
+    keyPad[keyIn] = 1;
 }
-*/
+
+void Chip8::SetKeyOff(int keyIn)
+{
+    keyPad[keyIn] = 0;
+}
+
