@@ -1,4 +1,4 @@
-#include "chip8.h"
+#include "chip8.hpp"
 
 Chip8::Chip8(): memory{0}, V{0}, I(0), pc(0), delayTimer(0), soundTimer(0), stack{0}, sp(0), keyPad{0},
                 gfx{0}, opcode(0), randSeed(std::chrono::system_clock::now().time_since_epoch().count())

@@ -5,7 +5,7 @@
 #define CHIP8_GRAPHICS_H
 
 #include <SDL2/SDL.h>
-#include "chip8.h"
+#include "chip8.hpp"
 
 class Graphics
 {

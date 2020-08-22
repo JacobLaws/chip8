@@ -1,5 +1,5 @@
-#include "chip8.h"
-#include "graphics.h"
+#include "chip8.hpp"
+#include "platform.hpp"
 
 int main(int argv, char** args)
 {
